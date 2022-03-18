@@ -6,11 +6,9 @@ import time
 # custom imports
 from Pengu_fcns import PenguGameBoard
 
-from Pengu_fcns import string_from_board, board_from_string
+from Pengu_fcns import board_from_string
 
-from Pengu_fcns import pretty_print_board, list_valid_moves, pick_random_move
-from Pengu_fcns import make_move, count_fish, check_game_end
-from Pengu_fcns import make_list_of_moves
+from Pengu_fcns import pick_random_move
 from Pengu_fcns import IDDFS_algorithm
 from Pengu_fcns import goal_hw2, goal_hw3
 
@@ -85,7 +83,7 @@ if do_IDDFS_solution:
     # end if print_boards
     
     # carry out the solution moves to get Pengu's position and score
-    end_game_state = make_list_of_moves(this_game_start,move_history)
+    end_game_state = this_game_start.make_list_of_moves(move_history)
     
     time_taken = time.time()-time_before
     print('IDDFS elapsed time was '+f'{time_taken:2f}')
@@ -106,7 +104,7 @@ if end_game_printouts:
     print('pengu pts = '+str(pengu_score))
     print('move history = '+str(move_history[1:])+
           ' length = '+str(len(move_history[1:])))
-    print('fish remaining = '+str(count_fish(board_array)))
+    print('fish remaining = '+str(end_game_state.count_fish()))
 # end if end_game_printouts
 
 #%% print the output file
