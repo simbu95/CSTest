@@ -1,4 +1,5 @@
 from PenguBoard import PenguGameBoard
+import numpy as np
 
 def readPenguBoardFile(input_filename):
     data = open(input_filename, "r")  # open infile in read mode
@@ -16,7 +17,8 @@ def readPenguBoardFile(input_filename):
     board_cols = int(split_header[1]) # second to # of columns
 
     # initialize empty board
-    board_array = ([['']*board_cols for i in range(board_rows)]) 
+    hazards_array = ([['']*board_cols for i in range(board_rows)])
+    fish = np.zeros((board_rows,board_cols),dtype=int)
 
     # populate the board with the characters from the input file
     for i,line in enumerate(data): # i is the file line index, line is text line
@@ -29,14 +31,16 @@ def readPenguBoardFile(input_filename):
                 if character == 'P':    # if character is 'P' create tuple of his 
                     pengu_pos = [i,j]   # row, column coordinates (from top left)
                     character = ' ' # put ice on board behind pengu start position
-                # end if handling Pengu position
-                board_array[i][j] = character # put character on the board as long
+                elif character == '*':
+                    fish[i,j] = 1
+                    character = ' '
+                hazards_array[i][j] = character # put character on the board as long
                     # as it is not a newline character or pengu's position
             # end newline/else case handling
         # end j loop
     # end i loop
 
-    return PenguGameBoard(board_array,pengu_pos,0)
+    return PenguGameBoard(hazards_array,fish,pengu_pos,0)
     
 def endGamePrintouts(end,move_history,print_boards):
     if print_boards:
@@ -46,7 +50,7 @@ def endGamePrintouts(end,move_history,print_boards):
     print('pengu pts = '+str(end.score))
     print('move history = '+str(move_history[1:])+
           ' length = '+str(len(move_history[1:])))
-    print('fish remaining = '+str(end.count_fish())) #This could also be totalFish-score
+    print('fish remaining = '+str(end.totalFish - end.score)) #This could also np.count non zero of fish
     
 def printToOutputFile(end,move_history,output_filename):
     # open output file to write the game to
@@ -72,7 +76,7 @@ def printToOutputFile(end,move_history,output_filename):
     p_col = end.position[1]
     
     # print the board to the file
-    for i,row in enumerate(end.board):
+    for i,row in enumerate(end.hazards):
         # start with a newline for each row. Keeps a blank line from being
         # written at the end of the file.
         f.write('\n')
@@ -82,16 +86,15 @@ def printToOutputFile(end,move_history,output_filename):
             # handle case where Pengu is standing on a snow patch or hazard
             if i == p_row and j == p_col: # if printing where pengu is standing
                 # handle the case where pengu is on a hazard = dead
-                if (end.board[p_row][p_col] == 'S' # shark death
-                        or end.board[p_row][p_col] == 'U'): # bear death
+                if (end.hazards[p_row][p_col] == 'S' # shark death
+                        or end.hazards[p_row][p_col] == 'U'): # bear death
                     f.write('X') # both get an X for pengu
                 else:
-                    f.write('P') # otherwise, write P for pengu's location
+                    if (end.fish[i,j]):
+                        f.write('*') 
+                    else:
+                        f.write('P') # otherwise, write P for pengu's location
                 # end if else handling pengu's position
             else:
                 f.write(char)
-            # end if else writing board characters
-        # end for loop through characters within the row
-    # end for loop through rows
     f.close() # close the file
-# end if print_to_output_file

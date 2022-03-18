@@ -5,7 +5,6 @@ import time
 
 # custom imports
 from PenguBoard import goal_hw2, goal_hw3
-from PenguBoard import board_from_string
 from PenguIDDFS import IDDFS_algorithm
 import PenguUtil
 

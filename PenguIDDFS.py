@@ -4,18 +4,11 @@ import numpy as np # for hash storage
 import time # for optimization testing
 
 def hash_check_BDFS(game_in,path_length,hash_table_in):
-    """
-    Given a game state, length, hash table, check the hash table for the game
-    state. If the new path to the state is shorter, replace the existing
-    hash. Otherwise, skip the current state (because it is a longer path
-    to an explored state). Return boolean True if path should be extended,
-    False if path should not be extended, and return the hash table.
-    
-    """
-    hashed_board = hash(game_in.string_from_board()) # hash of game state string
+
+    hashed_board = hash(str(np.append(game_in.fish.flatten(),game_in.position))) # hash of game state
     # hash table also needs the path length to compare and keep shorter paths
     # to visited states
-    hash_table_entry = np.array([[hashed_board,path_length]])
+    hash_table_entry = np.array([[hashed_board,path_length]]) #this is a poor way to do hashing... 
     
     should_extend_path = True
     
