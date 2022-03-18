@@ -90,11 +90,11 @@ def printToOutputFile(end,move_history,output_filename):
                         or end.hazards[p_row][p_col] == 'U'): # bear death
                     f.write('X') # both get an X for pengu
                 else:
-                    if (end.fish[i,j]):
-                        f.write('*') 
-                    else:
-                        f.write('P') # otherwise, write P for pengu's location
+                    f.write('P') # otherwise, write P for pengu's location
                 # end if else handling pengu's position
             else:
-                f.write(char)
+                if (end.fish[i,j]):
+                    f.write('*') 
+                else:
+                    f.write(char)
     f.close() # close the file
