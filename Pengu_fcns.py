@@ -1,86 +1,3 @@
-#%% change log/update history
-# -*- coding: utf-8 -*-
-"""
-CS 5400 Introduction to Artificial Intelligence
-Jeremiah Rittenhouse
-Graduate Student, Missouri University of Science and Technology
-
-2/14/2022
-"""
-
-'''
-Began code 2/14/2022
-My plan is to create functions to move Pengu.
-'''
-
-"""
-Begin trying to implement BFS 3/2/2022.
-
-Method: BFS_algorithm uses action keys to store path and state information. I
-do not store the game board at each state, I only store the list of actions. 
-Therefore, I recalculate the game state by carrying out the "move history" 
-list each time through the frontier loop. 
-
-BFS_algorithm walkthrough:
-    first, select and remove a path
-    calculate the board and game state resulting from following that path
-    check goal function (did pengu earn 8 points yet?)
-    check game end (do not extend frontier paths where pengu is dead or all
-                    fish are gone)
-    extend frontier with available moves from the current state
-# loop
-
-In order to implement the algorithm with the initial state, I added a "0" to
-the action key list, which means "no action". This is not a valid move, but
-I use it to start the algorithm. I then trim the leading zero from the move
-history at the print to output file stage.
-
-The other detail I'm not the happiest with is that I have two similar goal-
-ish functions. One to check game end via death or zero fish remaining, the
-other to check if Pengu gained 8 points. Two separate checks were useful in
-the BFS_algorithm because even though the game ends at Pengu death, the 
-algorithm should NOT return the path to that ending, because it does not
-satisfy the goal.
-"""
-
-"""
-Began trying to implement ID-DFS 3/10/2022
-
-4pm on 3/10, I got majorly distracted writing a function to encode a board
-to a string and another function to decode the string to a board. My plan
-was to use the string encoding to store game states for pruning the search
-space (don't search duplicates of the same state). Now I am working on 
-changing the "board_in,pengu_pos" functions and arguments to use a new
-PenguGameBoard class.
-"""
-
-"""
-Working on ID-DFS 3/11/2022
-
-I think I have basic ID-DFS working without any search pruning. I'm getting
-a correct goal path according to Discord responses. However, it takes 7 min
-to reach that goal path. 
-
-After implementing a hash method to prune the search tree, I can get to ~12
-seconds on my PC. However, my goal path length is 17, not optimal. :(
-"""
-
-"""
-Working on pruning ID-DFS 3/12/2022
-
-After sacrificing a bunch of brain cells, I got my hash method working by
-including the path length in the hash table. I used some tricky array
-indexing/slicing to do a numpy array for speed, and it works as fast as
-the nonoptimal 17 length path. I got 24 points on the hw3 example in 16
-seconds and 19 moves. Unfortunately, I hit run on the 2500by2500 board,
-and it revealed that my hash method is crippled by large size. :( My hash
-function uses "string_from_board" that stores way more information from the
-board than it needs to. Aaand it becomes very slow to process a large board.
-
-I'm considering reprogramming the entire code to store the game state more
-efficiently...but my time turner isn't working today yet.
-"""
-
 #%% imports
 import random # for random.choice() to get a random move
 from collections import deque # for the deque object
@@ -134,7 +51,7 @@ class PenguGameBoard:
                )
 
 #%% the functions
-
+#These should be class functions... would make things a lot easier to deal with, I will fix it on next pass. 
 def move_parse(move_key):
     """Given a move, map it into row_fx and col_fx indices."""
     move_idx = possible_moves.index(move_key)
@@ -563,99 +480,6 @@ def goal_hw3(score_in):
 # end def goal_hw3
 
 #def BFS_algorithm(board_in,pengu_position):
-def BFS_algorithm(game_in):
-    """
-    Given board and pengu position, do the breadth first search algorithm.
-    Continue until goal() returns True. Assume that goal() will always be 
-    satisfied given the input file, since the Puzzle Assignment #2 document
-    stated I can always safely assume there will be at least one way for 
-    Pengu to achieve the desired score from the initial input game board.
-    
-    From class:
-    
-    FUNCTION: GenericGraphSearch
-
-    INPUT: A graph
-           A start state, s
-           A goal() function
-
-    BEGIN:
-        frontier = {[s]}
-        
-        WHILE frontier is not empty:
-            select path p = [n0, n1, n2, ..., nk]
-            
-            IF goal(nk):
-                RETURN p
-            ELSE:
-                FOR every neighbor nk+1 of nk:
-                    insert [n0, n1, n2, ..., nk, nk+1] to frontier
-    """
-    
-    board_in = game_in.board
-    pengu_position = game_in.position
-    score_in = game_in.score
-    
-    numits = 0
-    move_history = [0,] 
-    
-    frontier = deque([move_history])
-    
-    while frontier != deque([]): # while frontier is not empty
-        #print('number of loop iterations = '+str(numits))
-        #print('frontier size = '+str(sys.getsizeof(frontier)/1024))
-        
-        numits = numits+1
-        
-        # select and remove a path
-        selected_history = frontier[0]
-        #print('selected history: '+str(selected_history))
-        frontier.popleft() 
-        #print('popped left')
-        
-#        (current_board, # update the board, pengu position, and see if any
-#         current_pengu_pos, # points were gained by the move
-#         current_score
-#        ) = make_list_of_moves(board_in,pengu_position,selected_history)
-        
-        updated_board = make_list_of_moves(game_in,selected_history)
-        
-        #print('checking goal')
-        # check goal
-        #if goal_hw2(current_board,current_pengu_pos,current_score):
-        if goal_hw2(updated_board.score):
-            print('number of loop iterations = '+str(numits))
-            print('frontier size = '+str(sys.getsizeof(frontier)/1024))
-            return(selected_history)
-        # end if checking goal
-        
-        # do not extend paths where the game is over
-        #if check_game_end(current_board,current_pengu_pos):
-        if check_game_end(updated_board):
-            continue # mainly to skip the cases where Pengu dies
-        # end if check game end
-        
-        #print('goal not satisfied')
-        # if goal not satisfied, extend frontier with path extensions
-        #move_options = list_valid_moves(current_board,current_pengu_pos) # the 
-        move_options = list_valid_moves(updated_board)
-        # possible moves from pengu's position in the first frontier entry
-        #print('found move options: '+str(move_options))
-        
-        for move in move_options:
-            extended_history = selected_history+[move]
-            frontier.append(extended_history)
-            #print('frontier = '+str(frontier))
-        # end for loop extending frontier
-        
-        #if numits == 4: # iteration limiting tool for bug hunting
-        #    break
-    # end while frontier not empty loop
-    print('no goal satisfying path found')
-    print('number of loop iterations = '+str(numits))
-    print('frontier size = '+str(sys.getsizeof(frontier)/1024))
-    return(False)
-# end def BFS_algorithm
 
 def hash_check_BDFS(game_in,path_length,hash_table_in):
     """
@@ -711,42 +535,6 @@ def hash_check_BDFS(game_in,path_length,hash_table_in):
 # end def hash_check_BDFS
 
 def BoundedDFS_algorithm(game_in,goal_fcn,depth_limit):
-    """
-    Given game state input, do the DFS search algorithm up to depth limit.
-    Return True if depth_hit 
-    Return path to goal if goal is found
-    
-    From class:
-    
-    FUNCTION: BoundedDepthFirstSearch
-
-    INPUT: A graph
-           A start state, s
-           A goal() function
-           A depth limit, d
-    
-    VAR: depth_hit : boolean
-
-    BEGIN:
-        depth_hit = False
-        
-        frontier = {[s]} // FI-LO stack
-        
-        WHILE frontier is not empty DO:
-            select path p = [n0, n1, n2, ..., nk] and remove from frontier
-            
-            IF length(p) = d THEN // only checks length d
-                IF goal(nk) THEN
-                    RETURN p
-                ELSEIF nk has neighbors THEN
-                    depth_hit = True
-            ELSE
-                FOR every neighbor nk+1 of nk DO
-                    add [n0, n1, n2, ..., nk, nk+1] to frontier
-        RETURN depth_hit
-    END
-    """
-    
     numits = 0
     move_history = [0,] 
     
@@ -755,85 +543,23 @@ def BoundedDFS_algorithm(game_in,goal_fcn,depth_limit):
     
     # hash table
     explored_hashes = np.empty((0,2))
-    #explored_hashes = []
-    #explored_hashes = deque([])
-    #explored_hash_table = deque([])
     
     while frontier != deque([]): # while frontier is not empty
-        #print('number of loop iterations = '+str(numits))
-        #print('frontier size = '+str(sys.getsizeof(frontier)/1024))
         
         numits = numits+1
         
         # select and remove a path
-        selected_history = frontier[-1] # select the last in path (FILO stack)
-        #print(str(frontier))
-        #print('selected history: '+str(selected_history))
-        frontier.pop() # remove the last in path (select and remove)
+        selected_history = frontier.pop() # remove the last in path (select and remove)
         updated_board = make_list_of_moves(game_in,selected_history)
-        
-        """
-        -----------------------------------------------------------------------
-        REMOVE from here because it makes more sense to not check the hash
-        until the depth path length has been reached. Move this functionality
-        to a separate hash check function.
-        -----------------------------------------------------------------------
-        hashed_board = hash(string_from_board(updated_board))
-        this_path_length = len(selected_history)
-        hash_table_entry = np.array([[hashed_board,this_path_length]])
-        
-        if hash_table_entry[0,0] not in explored_hashes:
-            #print('hash table entry not in explored hashes')
-            # if the state has not been reached before, just append it
-            explored_hashes = np.append(explored_hashes,
-                                        hash_table_entry,
-                                        axis=0
-                                        )
-            #explored_hashes.append(hashed_board)
-            #explored_hashes.append(hash_table_entry)
-            #print('length of explored hashes = '+str(len(explored_hashes)))
-            #print(str(explored_hashes))
-        else:
-            # mask holds 'True' where visited game state is equivalent to the
-            # currently found game state
-            hash_row_mask = (explored_hashes == hashed_board)[:,0]
-            # if the currently explored path to a previously found game state
-            # is shorter than the stored state path length, replace previously
-            # found (longer) path with the new path
-            if this_path_length < explored_hashes[hash_row_mask,1]:
-                explored_hashes[hash_row_mask,:] = hash_table_entry
-                #print('found shorter path to ')
-                #print(str(hashed_board))
-                #pretty_print_board(updated_board)
-                #print('  and replaced a hash')
-            else:
-                #print('found longer path to ')
-                #print(str(hashed_board))
-                #pretty_print_board(updated_board)
-                #print('matching?=')
-                #print(str(explored_hashes[hash_row_mask,0]))
-                #print('  and did not replace a hash')
-                continue
-            # end if else checking path length
-        # end if checking hashed board
-        """
-        
         move_options = list_valid_moves(updated_board)
         
-        if len(selected_history) == depth_limit:
+        if len(selected_history) == depth_limit: 
             if goal_fcn(updated_board.score):
                 return(selected_history)
-            #elif check_game_end(updated_board):
-            #    print('continued in if due to check game end == true')
-            #    continue # mainly to skip the cases where Pengu dies
             elif len(move_options) != 0: #nk has neighbors
                 depth_hit=True
-                #print('depth hit = '+str(depth_hit))
             # end if goal_fcn/elif game end/elif nk has neighbors
         else: # for every neighbor nk+1 of nk add nk+1 to frontier
-            
-            # First check the Pengu death, because that is cheaper to
-            # compute than if the state has been reached or not
             if check_game_end(updated_board):
                 #print('continued in else due to check game end == true')
                 continue # skip the cases where Pengu dies
@@ -863,36 +589,6 @@ def BoundedDFS_algorithm(game_in,goal_fcn,depth_limit):
 # end def BoundedDFS_algorithm
 
 def IDDFS_algorithm(game_in,goal_fcn):
-    """
-    Given game state input, do the ID-DFS search algorithm.
-    Continue until goal() returns True. Assume that goal() will always be 
-    satisfied given the input file, since the Puzzle Assignment #3 document
-    stated I can always safely assume there will be at least one way for 
-    Pengu to achieve the desired score from the initial input game board.
-    
-    From class:
-    
-    FUNCTION IterativeDeepeningDFS
-    
-    INPUT: A graph
-           A start node
-           A goal() function
-    
-    VAR depth
-        res
-    
-    BEGIN
-        depth = 0
-        
-        REPEAT
-            res = BoundedDepthFirstSearch(graph,start node,goal(),depth)
-            
-            IF res is a path THEN
-                RETURN res
-            depth = depth + 1
-        UNTIL not res
-    END
-    """
     depth = 1
     res = True
     
